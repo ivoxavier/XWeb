@@ -1,0 +1,107 @@
+/* 
+ * Copyright (C) 2023 Ivo Xavier
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License 3 as published by
+ * the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see http://www.gnu.org/licenses/.
+ */
+
+import QtQuick 2.9
+import Lomiri.Components 1.3
+import QtQuick.Window 2.2
+import Morph.Web 0.1
+import QtWebEngine 1.7
+import Qt.labs.settings 1.0
+import QtSystemInfo 5.5
+import Lomiri.Content 1.3
+import QtQuick.Controls.Suru 2.2
+
+
+MainView {
+  id: mainView
+
+  objectName: "mainView"
+  
+  property color b_color: "#000000"
+
+  width: units.gu(45)
+  height: units.gu(75)
+
+  applicationName: "xweb.ivoxavier"
+  backgroundColor : "transparent"
+  anchors {
+    fill: parent
+    bottomMargin: LomiriApplication.inputMethod.visible ? LomiriApplication.inputMethod.keyboardRectangle.height/(units.gridUnit / 8) : 0
+    Behavior on bottomMargin {
+        NumberAnimation {
+            duration: 175
+            easing.type: Easing.OutQuad
+        }
+    }
+  }
+
+  property list<ContentItem> importItems
+
+  PageStack {
+    id: mainPageStack
+    anchors.fill: parent
+    Component.onCompleted: mainPageStack.push(pageMain)
+
+
+    Page {
+      id: pageMain
+      anchors.fill: parent
+
+      WebEngineView {
+        id: webview
+        anchors{ fill: parent }
+        focus: true
+        property var currentWebview: webview
+        settings.pluginsEnabled: true
+
+        profile:  WebEngineProfile {
+          id: webContext
+          httpUserAgent: "Mozilla/5.0 (Linux; Android 10) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.5845.163 Mobile Safari/537.36"
+          storageName: "Storage"
+          persistentStoragePath: "/home/phablet/.cache/xweb.ivoxavier/xweb.ivoxavier/QtWebEngine"
+        }
+        anchors {
+          fill:parent
+          centerIn: parent.verticalCenter
+        }
+
+        userScripts: WebEngineScript {
+          injectionPoint: WebEngineScript.DocumentReady
+          worldId: WebEngineScript.MainWorld
+          name: "scrollbartheme"
+          sourceUrl: "scrollBarTheme.js"
+      }
+
+        url: "https://www.x.com/"
+        
+        onFileDialogRequested: function(request) {
+          request.accepted = true;
+          var importPage = mainPageStack.push(Qt.resolvedUrl("ImportPage.qml"),{"contentType": ContentType.All, "handler": ContentHandler.Source})
+          importPage.imported.connect(function(fileUrl) {
+            console.log(String(fileUrl).replace("file://", ""));
+            request.dialogAccept(String(fileUrl).replace("file://", ""));
+            mainPageStack.push(pageMain)  
+          })
+        }
+        onNewViewRequested: {
+            request.action = WebEngineNavigationRequest.IgnoreRequest
+            if(request.userInitiated) {
+                Qt.openUrlExternally(request.requestedUrl)
+            }
+        }
+      }
+    }
+  }
+}

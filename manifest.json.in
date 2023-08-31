@@ -1,0 +1,16 @@
+{
+    "name": "xweb.ivoxavier",
+    "description": "Unofficial WebApp for X",
+    "architecture": "@CLICK_ARCH@",
+    "title": "XWeb",
+    "hooks": {
+        "xweb": {
+            "apparmor": "xweb.apparmor",
+            "desktop":  "xweb.desktop",
+            "content-hub": "xweb-content-hub.json" 
+        }
+    },
+    "version": "0.1.0",
+    "maintainer": "Ivo Xavier <ivofernandes12@gmail.com>",
+    "framework" : "@CLICK_FRAMEWORK@"
+}
